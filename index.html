@@ -1,0 +1,149 @@
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #container>div>.cell-true,
+        .cell-false {
+            width: 10px;
+            height: 10px;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell-true {
+            background-color: black;
+        }
+
+        .cell-false {
+            background-color: beige;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+
+    <script>
+        const cellSize = 10;
+
+        // base
+        const live = [2, 3];
+        const dead = [3];
+
+        // burn down
+        // const dead = [4, 6, 7, 8];
+        // const live = [3, 5, 6, 7, 8];
+
+        //majority
+        // const dead = [4,5,6,7,8];
+        // const live = [5,6,7,8];
+
+        //coagulation
+        // const dead = [3,7,8];
+        // const live = [2,3,5,6,7,8];
+
+
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const rowAmount = Math.floor(screenHeight / cellSize);
+        const columnAmount = Math.floor(screenWidth / cellSize);
+        let buf = [];
+
+        play();
+
+        function play() {
+            let lifecycles = 10000;
+            let arr = initRandGameArray();
+
+            const key = setInterval(() => {
+                render(arr);
+                arr = getNextStep(arr);
+                if (--lifecycles <= 0) clearInterval(key);
+            }, 200);
+        }
+
+        function getNextStep(arr) {
+            const newArr = buf;
+            buf = arr;
+
+            for (let i = 0; i < rowAmount; i++) {
+                newArr[i] = [];
+                for (let j = 0; j < columnAmount; j++) {
+                    const liveAmount = getLiveNeighborsAmount(arr, i, j);
+                    if (arr[i][j]) {
+                        newArr[i][j] = live.includes(liveAmount);
+                        continue;
+                    }
+
+                    newArr[i][j] = dead.includes(liveAmount);
+                }
+            }
+
+            return newArr;
+        }
+
+        function getLiveNeighborsAmount(arr, i, j) {
+            return [
+                (arr[i - 1] || [])[j - 1], (arr[i] || [])[j - 1], (arr[i + 1] || [])[j - 1],
+                (arr[i - 1] || [])[j], (arr[i + 1] || [])[j],
+                (arr[i - 1] || [])[j + 1], (arr[i] || [])[j + 1], (arr[i + 1] || [])[j + 1],
+            ].filter(n => n).length;
+        }
+
+        function initRandGameArray() {
+            const arr = [];
+            for (let i = 0; i < rowAmount; i++) {
+                arr[i] = [];
+                for (let j = 0; j < columnAmount; j++) {
+                    arr[i][j] = Boolean(Math.round(Math.random(1)));
+                }
+            }
+
+            return arr;
+        }
+
+        function initFullGameArray() {
+            const arr = [];
+            for (let i = 0; i < rowAmount; i++) {
+                arr[i] = [];
+                for (let j = 0; j < columnAmount; j++) {
+                    arr[i][j] = true;
+                }
+            }
+
+            return arr;
+        }
+
+        function render(arr) {
+            const container = document.getElementById('container');
+
+            if (!container.childNodes.length) {
+                let row = '';
+                for (let i = 0; i < rowAmount; i++) {
+                    let col = '';
+                    for (let j = 0; j < columnAmount; j++) {
+                        col += '<div class="cell-' + arr[i][j] + '"></div>';
+                    }
+                    row += '<div class="row">' + col + '</div>';
+                }
+                container.insertAdjacentHTML('afterbegin', row);
+
+                return;
+            }
+
+            for (let i = 0; i < rowAmount; i++) {
+                for (let j = 0; j < columnAmount; j++) {
+                    document.getElementById('container').childNodes[i].childNodes[j].className = 'cell-' + Boolean(arr[i][j]);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
